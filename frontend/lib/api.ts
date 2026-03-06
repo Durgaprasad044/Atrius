@@ -101,3 +101,77 @@ export async function removeInterest(id: string) {
   if (!res.ok) throw new Error(data.message || "Failed to remove interest");
   return data;
 }
+
+// --- Matches ---
+
+export async function getMatches() {
+  const res = await fetchAPI("/api/matches");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch matches");
+  return data;
+}
+
+// --- Posts ---
+
+export async function getPosts() {
+  const res = await fetchAPI("/api/posts");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch posts");
+  return data;
+}
+
+export async function createPost(content: string) {
+  const res = await fetchAPI("/api/posts", {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to create post");
+  return data;
+}
+
+export async function deletePost(id: string) {
+  const res = await fetchAPI(`/api/posts/${id}`, {
+    method: "DELETE",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to delete post");
+  return data;
+}
+
+export async function likePost(id: string) {
+  const res = await fetchAPI(`/api/posts/${id}/like`, {
+    method: "POST",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to like post");
+  return data;
+}
+
+// --- Events ---
+
+export async function getEvents() {
+  const res = await fetchAPI("/api/events");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch events");
+  return data;
+}
+
+export async function createEvent(eventData: { title: string; description: string; date: string; location: string }) {
+  const res = await fetchAPI("/api/events", {
+    method: "POST",
+    body: JSON.stringify(eventData),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to create event");
+  return data;
+}
+
+export async function attendEvent(id: string) {
+  const res = await fetchAPI(`/api/events/${id}/attend`, {
+    method: "POST",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to update attendance");
+  return data;
+}

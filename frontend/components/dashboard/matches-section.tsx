@@ -1,20 +1,14 @@
 "use client"
 
-import { useState } from "react"
-import { Sparkles, MessageCircle, UserPlus, Filter, Search, MapPin, Briefcase, X, Send } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Sparkles, MessageCircle, UserPlus, Search, MapPin, Briefcase, Send, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -22,115 +16,75 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { getMatches } from "@/lib/api"
 
-const matches = [
-  {
-    id: 1,
-    name: "Sarah Chen",
-    title: "AI/ML Engineer",
-    company: "OpenAI",
-    location: "San Francisco, CA",
-    avatar: "/placeholder.svg?height=64&width=64",
-    matchScore: 95,
-    skills: ["Python", "TensorFlow", "Machine Learning", "NLP"],
-    mutualConnections: 12,
-    lookingFor: "Technical Co-founder",
-    online: true,
-  },
-  {
-    id: 2,
-    name: "Michael Park",
-    title: "Product Designer",
-    company: "Figma",
-    location: "New York, NY",
-    avatar: "/placeholder.svg?height=64&width=64",
-    matchScore: 89,
-    skills: ["UI/UX", "Figma", "Design Systems", "Prototyping"],
-    mutualConnections: 8,
-    lookingFor: "Startup opportunities",
-    online: true,
-  },
-  {
-    id: 3,
-    name: "Emily Rodriguez",
-    title: "Backend Developer",
-    company: "Stripe",
-    location: "Seattle, WA",
-    avatar: "/placeholder.svg?height=64&width=64",
-    matchScore: 87,
-    skills: ["Go", "Kubernetes", "PostgreSQL", "Microservices"],
-    mutualConnections: 5,
-    lookingFor: "Mentorship",
-    online: false,
-  },
-  {
-    id: 4,
-    name: "David Kim",
-    title: "Startup Founder",
-    company: "TechVentures",
-    location: "Austin, TX",
-    avatar: "/placeholder.svg?height=64&width=64",
-    matchScore: 84,
-    skills: ["Leadership", "Fundraising", "Product Strategy", "React"],
-    mutualConnections: 15,
-    lookingFor: "Technical Partners",
-    online: true,
-  },
-  {
-    id: 5,
-    name: "Anna Williams",
-    title: "DevOps Engineer",
-    company: "AWS",
-    location: "Denver, CO",
-    avatar: "/placeholder.svg?height=64&width=64",
-    matchScore: 82,
-    skills: ["AWS", "Terraform", "CI/CD", "Docker"],
-    mutualConnections: 3,
-    lookingFor: "Collaborators",
-    online: false,
-  },
-  {
-    id: 6,
-    name: "James Lee",
-    title: "Data Scientist",
-    company: "Meta",
-    location: "Menlo Park, CA",
-    avatar: "/placeholder.svg?height=64&width=64",
-    matchScore: 79,
-    skills: ["Python", "PyTorch", "Data Analysis", "Statistics"],
-    mutualConnections: 7,
-    lookingFor: "Research Partners",
-    online: true,
-  },
-]
+interface MatchUser {
+  id: string
+  name: string
+  image?: string
+  profile?: {
+    title?: string
+    location?: string
+    company?: string
+    avatarInitials?: string
+  }
+}
 
-const roles = ["All Roles", "Developer", "Designer", "Product Manager", "Data Scientist", "Founder", "Engineer"]
+interface Match {
+  id: string
+  score: number
+  status: string
+  matchedUser: MatchUser
+}
 
 export function MatchesSection() {
-  const [selectedRole, setSelectedRole] = useState("All Roles")
+  const router = useRouter()
+  const [matches, setMatches] = useState<Match[]>([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [messageDialog, setMessageDialog] = useState<{ open: boolean; match: typeof matches[0] | null }>({
+  const [messageDialog, setMessageDialog] = useState<{ open: boolean; match: Match | null }>({
     open: false,
     match: null,
   })
   const [message, setMessage] = useState("")
 
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const data = await getMatches()
+        setMatches(data)
+      } catch {
+        router.push("/auth/login")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchMatches()
+  }, [router])
+
   const filteredMatches = matches.filter((match) => {
-    const matchesSearch = match.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      match.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      match.skills.some(skill => skill.toLowerCase().includes(searchQuery.toLowerCase()))
-    return matchesSearch
+    const name = match.matchedUser?.name || ""
+    const title = match.matchedUser?.profile?.title || ""
+    return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      title.toLowerCase().includes(searchQuery.toLowerCase())
   })
 
-  const openMessageDialog = (match: typeof matches[0]) => {
+  const openMessageDialog = (match: Match) => {
     setMessageDialog({ open: true, match })
     setMessage("")
   }
 
   const sendMessage = () => {
-    // Handle message sending
     setMessageDialog({ open: false, match: null })
     setMessage("")
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
   }
 
   return (
@@ -152,115 +106,90 @@ export function MatchesSection() {
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Search by name, title, or skills..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or title..."
+              className="pl-10"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
         </CardContent>
       </Card>
 
+      {/* Empty State */}
+      {filteredMatches.length === 0 && (
+        <Card className="p-12 text-center">
+          <Sparkles className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-lg font-medium">No matches found yet.</p>
+          <p className="text-muted-foreground mt-1">Complete your profile to get matched!</p>
+        </Card>
+      )}
+
       {/* Matches Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filteredMatches.map((match) => (
-          <Card key={match.id} className="match-card group">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
+        {filteredMatches.map((match) => {
+          const user = match.matchedUser
+          const initials = user?.name?.split(" ").map(n => n[0]).join("") || user?.profile?.avatarInitials || "?"
+          return (
+            <Card key={match.id} className="match-card group">
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
                     <Avatar className="h-14 w-14">
-                      <AvatarImage src={match.avatar} alt={match.name} />
+                      <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {match.name.split(" ").map(n => n[0]).join("")}
+                        {initials}
                       </AvatarFallback>
                     </Avatar>
-                    {match.online && (
-                      <div className="absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-background" />
+                    <div>
+                      <h3 className="font-semibold">{user?.name || "Unknown"}</h3>
+                      <p className="text-sm text-muted-foreground">{user?.profile?.title || "Not set"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full">
+                    <Sparkles className="h-3 w-3" />
+                    <span className="text-xs font-bold">{Math.round(match.score)}%</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    {user?.profile?.company && (
+                      <span className="flex items-center gap-1">
+                        <Briefcase className="h-3.5 w-3.5" />
+                        {user.profile.company}
+                      </span>
+                    )}
+                    {user?.profile?.location && (
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {user.profile.location}
+                      </span>
                     )}
                   </div>
-                  <div>
-                    <h3 className="font-semibold">{match.name}</h3>
-                    <p className="text-sm text-muted-foreground">{match.title}</p>
+
+                  <div className="flex gap-2 pt-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => openMessageDialog(match)}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Message
+                    </Button>
+                    <Button size="sm" className="flex-1">
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Connect
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-full">
-                  <Sparkles className="h-3 w-3" />
-                  <span className="text-xs font-bold">{match.matchScore}%</span>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Briefcase className="h-3.5 w-3.5" />
-                    {match.company}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {match.location}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {match.skills.slice(0, 3).map((skill) => (
-                    <Badge key={skill} variant="secondary" className="text-xs">
-                      {skill}
-                    </Badge>
-                  ))}
-                  {match.skills.length > 3 && (
-                    <Badge variant="secondary" className="text-xs">
-                      +{match.skills.length - 3}
-                    </Badge>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between pt-2 text-sm">
-                  <span className="text-muted-foreground">
-                    {match.mutualConnections} mutual connections
-                  </span>
-                  <Badge variant="outline" className="text-xs">
-                    {match.lookingFor}
-                  </Badge>
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={() => openMessageDialog(match)}
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Message
-                  </Button>
-                  <Button size="sm" className="flex-1">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Connect
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
       {/* Message Dialog */}
@@ -271,14 +200,14 @@ export function MatchesSection() {
               {messageDialog.match && (
                 <>
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={messageDialog.match.avatar} alt={messageDialog.match.name} />
+                    <AvatarImage src={messageDialog.match.matchedUser?.image || ""} alt={messageDialog.match.matchedUser?.name || ""} />
                     <AvatarFallback className="bg-primary/10 text-primary">
-                      {messageDialog.match.name.split(" ").map(n => n[0]).join("")}
+                      {messageDialog.match.matchedUser?.name?.split(" ").map(n => n[0]).join("") || "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p>{messageDialog.match.name}</p>
-                    <p className="text-sm font-normal text-muted-foreground">{messageDialog.match.title}</p>
+                    <p>{messageDialog.match.matchedUser?.name}</p>
+                    <p className="text-sm font-normal text-muted-foreground">{messageDialog.match.matchedUser?.profile?.title || ""}</p>
                   </div>
                 </>
               )}
