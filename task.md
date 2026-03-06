@@ -1,67 +1,43 @@
-In my Next.js frontend, create two pages that match the existing dark theme (bg-zinc-950, bg-zinc-900 cards).
-Page 1: app/dashboard/settings/page.tsx
-Create a full settings page with these sections:
-Account Settings
+Fix these two issues in my Next.js frontend:
+Fix 1 — Help & Support page dark theme:
+In app/dashboard/help/page.tsx, the page is showing a white background instead of dark theme. Fix by ensuring:
 
-Profile photo upload (just UI, no backend needed)
-Full name input
-Email input (readonly)
-Job title input
-Location input
-Company input
-Education input
-Bio textarea
-Save Changes button → calls PUT /api/profile/me with updated data
+Page wrapper: bg-zinc-950 min-h-screen text-white
+All cards: bg-zinc-900 border-zinc-800
+All inputs and textareas: bg-zinc-800 border-zinc-700 text-white
+All text: text-white or text-zinc-400 for secondary text
 
-Password & Security
+Fix 2 — Profile Strength calculation:
+In the sidebar component where Profile Strength is shown, replace the hardcoded 85% with a real dynamic calculation:
+tsconst calculateProfileStrength = (profile) => {
+  let strength = 0;
+  if (profile?.user?.name) strength += 15;
+  if (profile?.title) strength += 15;
+  if (profile?.location) strength += 10;
+  if (profile?.company) strength += 10;
+  if (profile?.education) strength += 10;
+  if (profile?.bio) strength += 10;
+  if (profile?.skills?.length > 0) strength += 15;
+  if (profile?.interests?.length > 0) strength += 15;
+  return strength;
+}
 
-Current password input
-New password input
-Confirm new password input
-Update Password button
+Fetch profile data in sidebar using getProfile() from @/lib/api
+Pass result to calculateProfileStrength()
+Display the real percentage
+Update the progress bar width dynamically: style={{ width: \${strength}%` }}`
+Update the hint text based on what's missing:
 
-Notifications
-
-Toggle switches for:
-
-Email notifications
-Match notifications
-Event reminders
-Weekly digest
-
-
-
-Danger Zone
-
-Delete Account button (red, shows confirmation dialog before acting)
+No skills → "Add skills to boost your matches"
+No bio → "Add a bio to boost your profile"
+No interests → "Add interests to boost your matches"
+Profile complete → "Your profile is complete! 🎉"
 
 
-Page 2: app/dashboard/help/page.tsx
-Create a help & support page with:
-FAQ Section with these questions and answers:
-
-"How does Smart Matching work?" → AI analyzes your skills and interests to find compatible professionals
-"How do I improve my Profile Strength?" → Add skills, interests, bio, and complete all profile fields
-"Can I delete my account?" → Yes, go to Settings → Danger Zone
-"How do I report a user?" → Use the flag icon on their profile or contact support
-"Is my data private?" → Yes, we never share your data with third parties
-
-Contact Support Section
-
-Subject input
-Message textarea
-Submit button
-
-Resources Section
-
-3 cards: "Getting Started Guide", "Privacy Policy", "Terms of Service"
 
 Rules:
 
-Both pages use 'use client'
-Match existing dark theme exactly (bg-zinc-950 background, bg-zinc-900 cards, white text)
-Use shadcn/ui components: Input, Textarea, Button, Switch, Card
-Settings page fetches current profile data on load and pre-fills all fields
-Do NOT change sidebar or navbar
+Do NOT change layout or structure
+Only fix colors and profile strength calculation
 
 

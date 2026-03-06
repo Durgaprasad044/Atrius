@@ -74,34 +74,34 @@ export function HelpSection() {
   }
 
   return (
-    <div className="space-y-8 max-w-3xl mx-auto">
+    <div className="space-y-8 max-w-3xl mx-auto text-white">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-heading font-bold flex items-center gap-2">
+        <h1 className="text-2xl font-heading font-bold flex items-center gap-2 text-white">
           <HelpCircle className="h-6 w-6 text-primary" />
           Help & Support
         </h1>
-        <p className="text-muted-foreground">Find answers or reach out to our team</p>
+        <p className="text-zinc-400">Find answers or reach out to our team</p>
       </div>
 
       {/* FAQ */}
-      <Card>
+      <Card className="bg-zinc-900 border-zinc-800">
         <CardHeader>
-          <CardTitle>Frequently Asked Questions</CardTitle>
-          <CardDescription>Quick answers to common questions</CardDescription>
+          <CardTitle className="text-white">Frequently Asked Questions</CardTitle>
+          <CardDescription className="text-zinc-400">Quick answers to common questions</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {faqItems.map((faq, index) => (
-            <div key={index} className="border border-border rounded-lg overflow-hidden">
+            <div key={index} className="border border-zinc-800 rounded-lg overflow-hidden">
               <button
                 onClick={() => toggleFaq(index)}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/50 transition-colors"
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-zinc-800/50 transition-colors"
               >
-                <span className="text-sm font-medium pr-4">{faq.question}</span>
-                <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${openFaq === index ? "rotate-180" : ""}`} />
+                <span className="text-sm font-medium pr-4 text-white">{faq.question}</span>
+                <ChevronDown className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform ${openFaq === index ? "rotate-180" : ""}`} />
               </button>
               {openFaq === index && (
-                <div className="px-4 pb-4 text-sm text-muted-foreground leading-relaxed border-t border-border pt-3">
+                <div className="px-4 pb-4 text-sm text-zinc-400 leading-relaxed border-t border-zinc-800 pt-3">
                   {faq.answer}
                 </div>
               )}
@@ -111,32 +111,34 @@ export function HelpSection() {
       </Card>
 
       {/* Contact Support */}
-      <Card>
+      <Card className="bg-zinc-900 border-zinc-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-white">
             <MessageSquare className="h-5 w-5" />
             Contact Support
           </CardTitle>
-          <CardDescription>Can&apos;t find what you&apos;re looking for? Send us a message</CardDescription>
+          <CardDescription className="text-zinc-400">Can&apos;t find what you&apos;re looking for? Send us a message</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="support-subject">Subject</Label>
+            <Label htmlFor="support-subject" className="text-zinc-300">Subject</Label>
             <Input
               id="support-subject"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               placeholder="What do you need help with?"
+              className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="support-message">Message</Label>
+            <Label htmlFor="support-message" className="text-zinc-300">Message</Label>
             <Textarea
               id="support-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               rows={5}
               placeholder="Describe your issue or question in detail..."
+              className="bg-zinc-800 border-zinc-700 text-white placeholder:text-zinc-500"
             />
           </div>
           <div className="flex items-center justify-between">
@@ -158,16 +160,16 @@ export function HelpSection() {
 
       {/* Resources */}
       <div>
-        <h2 className="text-lg font-heading font-semibold mb-4">Resources</h2>
+        <h2 className="text-lg font-heading font-semibold mb-4 text-white">Resources</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           {resources.map((resource, index) => (
-            <Card key={index} className="hover:border-primary/30 transition-colors cursor-pointer group">
+            <Card key={index} className="bg-zinc-900 border-zinc-800 hover:border-primary/30 transition-colors cursor-pointer group">
               <CardContent className="pt-6 text-center">
                 <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                   <resource.icon className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-sm font-semibold mb-1">{resource.title}</h3>
-                <p className="text-xs text-muted-foreground">{resource.description}</p>
+                <h3 className="text-sm font-semibold mb-1 text-white">{resource.title}</h3>
+                <p className="text-xs text-zinc-400">{resource.description}</p>
               </CardContent>
             </Card>
           ))}

@@ -1,8 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { User, Sparkles, Newspaper, Calendar, Settings, HelpCircle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getProfile } from "@/lib/api"
 
 interface DashboardSidebarProps {
   activeTab: string
@@ -23,7 +25,59 @@ const bottomNavItems = [
   { id: "help", label: "Help & Support", icon: HelpCircle },
 ]
 
+interface ProfileData {
+  user?: { name?: string }
+  title?: string
+  location?: string
+  company?: string
+  education?: string
+  bio?: string
+  skills?: unknown[]
+  interests?: unknown[]
+}
+
+function calculateProfileStrength(profile: ProfileData | null): number {
+  if (!profile) return 0
+  let strength = 0
+  if (profile.user?.name) strength += 15
+  if (profile.title) strength += 15
+  if (profile.location) strength += 10
+  if (profile.company) strength += 10
+  if (profile.education) strength += 10
+  if (profile.bio) strength += 10
+  if (profile.skills && profile.skills.length > 0) strength += 15
+  if (profile.interests && profile.interests.length > 0) strength += 15
+  return strength
+}
+
+function getHintText(profile: ProfileData | null): string {
+  if (!profile) return "Complete your profile to get started"
+  if (!profile.skills || profile.skills.length === 0) return "Add skills to boost your matches"
+  if (!profile.bio) return "Add a bio to boost your profile"
+  if (!profile.interests || profile.interests.length === 0) return "Add interests to boost your matches"
+  const strength = calculateProfileStrength(profile)
+  if (strength >= 100) return "Your profile is complete! 🎉"
+  return "Complete more fields to boost your profile"
+}
+
 export function DashboardSidebar({ activeTab, onTabChange, isOpen, onClose }: DashboardSidebarProps) {
+  const [profile, setProfile] = useState<ProfileData | null>(null)
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getProfile()
+        setProfile(data as ProfileData)
+      } catch {
+        // Silently fail — profile strength just shows 0
+      }
+    }
+    fetchData()
+  }, [])
+
+  const strength = calculateProfileStrength(profile)
+  const hint = getHintText(profile)
+
   return (
     <>
       {/* Mobile overlay */}
@@ -104,13 +158,13 @@ export function DashboardSidebar({ activeTab, onTabChange, isOpen, onClose }: Da
           <div className="m-4 rounded-lg bg-primary/5 border border-primary/10 p-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Profile Strength</span>
-              <span className="text-sm font-bold text-primary">85%</span>
+              <span className="text-sm font-bold text-primary">{strength}%</span>
             </div>
             <div className="h-2 rounded-full bg-muted">
-              <div className="h-2 w-[85%] rounded-full bg-primary" />
+              <div className="h-2 rounded-full bg-primary transition-all duration-500" style={{ width: `${strength}%` }} />
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Add more skills to boost your matches
+              {hint}
             </p>
           </div>
         </div>
