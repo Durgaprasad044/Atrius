@@ -1,14 +1,16 @@
 {
   "dependencies": {
-    "@prisma/client": "^6.19.2",
-    "bcryptjs": "latest",
-    "cors": "latest",
-    "dotenv": "latest",
-    "express": "latest",
-    "jsonwebtoken": "latest",
-    "passport": "latest",
-    "passport-google-oauth20": "latest",
-    "prisma": "^6.19.2"
+  "express": "latest",
+  "prisma": "latest",
+  "@prisma/client": "latest",
+  "bcryptjs": "latest",
+  "jsonwebtoken": "latest",
+  "cors": "latest",
+  "dotenv": "latest",
+  "passport": "latest",
+  "passport-google-oauth20": "latest",
+  "typescript": "latest",
+  "ts-node-dev": "latest"
   },
   "devDependencies": {
     "@types/bcryptjs": "latest",
