@@ -1,11 +1,13 @@
 "use client"
 
 import Link from "next/link"
-import { Bell, Search, Menu } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Bell, Search, Menu, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ModeToggle } from "@/components/mode-toggle"
+import { removeToken } from "@/lib/auth"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,9 +19,19 @@ import {
 
 interface DashboardHeaderProps {
   onMenuClick: () => void
+  profile: Record<string, unknown> | null
 }
 
-export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
+export function DashboardHeader({ onMenuClick, profile }: DashboardHeaderProps) {
+  const router = useRouter()
+  const user = profile?.user as { name?: string; email?: string; image?: string } | undefined
+  const avatarInitials = (profile?.avatarInitials as string) || user?.name?.substring(0, 2).toUpperCase() || "?"
+
+  const handleLogout = () => {
+    removeToken()
+    router.push("/auth/login")
+  }
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-16 items-center justify-between px-4 md:px-6">
@@ -66,17 +78,17 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-9 w-9 rounded-full">
                 <Avatar className="h-9 w-9">
-                  <AvatarImage src="/placeholder.svg?height=36&width=36" alt="User" />
-                  <AvatarFallback className="bg-primary/10 text-primary">JD</AvatarFallback>
+                  <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                  <AvatarFallback className="bg-primary/10 text-primary">{avatarInitials}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">John Doe</p>
+                  <p className="text-sm font-medium leading-none">{user?.name || "Not set"}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    john@example.com
+                    {user?.email || "Not set"}
                   </p>
                 </div>
               </DropdownMenuLabel>
@@ -84,7 +96,10 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
               <DropdownMenuItem>Profile Settings</DropdownMenuItem>
               <DropdownMenuItem>Account</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Log out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
