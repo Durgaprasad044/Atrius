@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 
+type AuthUser = { id: string; email: string };
+
 export const getAllPosts = async (
   _req: Request,
   res: Response,
@@ -32,7 +34,7 @@ export const createPost = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
+    const userId = (req.user as AuthUser).id;
     const { content } = req.body;
 
     if (!content) {
@@ -74,8 +76,8 @@ export const updatePost = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
-    const postId = req.params.id;
+    const userId = (req.user as AuthUser).id;
+    const postId = req.params.id as string;
     const { content } = req.body;
 
     const post = await prisma.post.findUnique({ where: { id: postId } });
@@ -110,8 +112,8 @@ export const deletePost = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
-    const postId = req.params.id;
+    const userId = (req.user as AuthUser).id;
+    const postId = req.params.id as string;
 
     const post = await prisma.post.findUnique({ where: { id: postId } });
     if (!post) {
@@ -137,7 +139,7 @@ export const likePost = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const postId = req.params.id;
+    const postId = req.params.id as string;
 
     const post = await prisma.post.findUnique({ where: { id: postId } });
     if (!post) {

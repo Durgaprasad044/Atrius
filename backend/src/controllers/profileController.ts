@@ -1,13 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 
+type AuthUser = { id: string; email: string };
+
 export const getMyProfile = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
+    const userId = (req.user as AuthUser).id;
 
     const profile = await prisma.profile.findUnique({
       where: { userId },
@@ -40,10 +42,9 @@ export const updateMyProfile = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
+    const userId = (req.user as AuthUser).id;
     const { name, title, location, company, education, bio, website, avatarInitials } = req.body;
 
-    // Update user name if provided
     if (name) {
       await prisma.user.update({
         where: { id: userId },
@@ -81,7 +82,7 @@ export const addSkill = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
+    const userId = (req.user as AuthUser).id;
     const { name } = req.body;
 
     if (!name) {
@@ -97,7 +98,7 @@ export const addSkill = async (
 
     const skill = await prisma.skill.create({
       data: {
-        profileId: profile.id,
+        profileId: profile.id as string,
         name,
       },
     });
@@ -114,8 +115,8 @@ export const removeSkill = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
-    const skillId = req.params.id;
+    const userId = (req.user as AuthUser).id;
+    const skillId = req.params.id as string;
 
     const profile = await prisma.profile.findUnique({ where: { userId } });
     if (!profile) {
@@ -123,13 +124,13 @@ export const removeSkill = async (
       return;
     }
 
-    const skill = await prisma.skill.findUnique({ where: { id: skillId } });
+    const skill = await prisma.skill.findUnique({ where: { id: skillId as string } });
     if (!skill || skill.profileId !== profile.id) {
       res.status(403).json({ message: "Not authorized to delete this skill" });
       return;
     }
 
-    await prisma.skill.delete({ where: { id: skillId } });
+    await prisma.skill.delete({ where: { id: skillId as string } });
 
     res.json({ message: "Skill removed" });
   } catch (error) {
@@ -143,7 +144,7 @@ export const addInterest = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
+    const userId = (req.user as AuthUser).id;
     const { name } = req.body;
 
     if (!name) {
@@ -159,7 +160,7 @@ export const addInterest = async (
 
     const interest = await prisma.interest.create({
       data: {
-        profileId: profile.id,
+        profileId: profile.id as string,
         name,
       },
     });
@@ -176,8 +177,8 @@ export const removeInterest = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
-    const interestId = req.params.id;
+    const userId = (req.user as AuthUser).id;
+    const interestId = req.params.id as string;
 
     const profile = await prisma.profile.findUnique({ where: { userId } });
     if (!profile) {
@@ -185,13 +186,13 @@ export const removeInterest = async (
       return;
     }
 
-    const interest = await prisma.interest.findUnique({ where: { id: interestId } });
+    const interest = await prisma.interest.findUnique({ where: { id: interestId as string } });
     if (!interest || interest.profileId !== profile.id) {
       res.status(403).json({ message: "Not authorized to delete this interest" });
       return;
     }
 
-    await prisma.interest.delete({ where: { id: interestId } });
+    await prisma.interest.delete({ where: { id: interestId as string } });
 
     res.json({ message: "Interest removed" });
   } catch (error) {

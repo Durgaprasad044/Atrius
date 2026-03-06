@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 
+type AuthUser = { id: string; email: string };
+
 export const getAllEvents = async (
   _req: Request,
   res: Response,
@@ -31,7 +33,7 @@ export const createEvent = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
+    const userId = (req.user as AuthUser).id;
     const { title, description, date, location } = req.body;
 
     if (!title || !date) {
@@ -66,7 +68,7 @@ export const getEventById = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const eventId = req.params.id;
+    const eventId = req.params.id as string;
 
     const event = await prisma.event.findUnique({
       where: { id: eventId },
@@ -101,8 +103,8 @@ export const updateEvent = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
-    const eventId = req.params.id;
+    const userId = (req.user as AuthUser).id;
+    const eventId = req.params.id as string;
     const { title, description, date, location } = req.body;
 
     const event = await prisma.event.findUnique({ where: { id: eventId } });
@@ -142,8 +144,8 @@ export const deleteEvent = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
-    const eventId = req.params.id;
+    const userId = (req.user as AuthUser).id;
+    const eventId = req.params.id as string;
 
     const event = await prisma.event.findUnique({ where: { id: eventId } });
     if (!event) {
@@ -169,8 +171,8 @@ export const attendEvent = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
-    const eventId = req.params.id;
+    const userId = (req.user as AuthUser).id;
+    const eventId = req.params.id as string;
 
     const event = await prisma.event.findUnique({ where: { id: eventId } });
     if (!event) {

@@ -1,13 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../lib/prisma";
 
+type AuthUser = { id: string; email: string };
+
 export const getMatches = async (
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
-    const userId = req.user!.id;
+    const userId = (req.user as AuthUser).id;
 
     const matches = await prisma.match.findMany({
       where: { userId },
