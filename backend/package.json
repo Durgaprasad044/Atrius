@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "@prisma/client": "^6.19.2",
+    "bcryptjs": "latest",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "jsonwebtoken": "latest",
+    "passport": "latest",
+    "passport-google-oauth20": "latest",
+    "prisma": "^6.19.2"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "latest",
+    "@types/cors": "latest",
+    "@types/express": "latest",
+    "@types/jsonwebtoken": "latest",
+    "@types/passport": "latest",
+    "@types/passport-google-oauth20": "latest",
+    "ts-node-dev": "latest",
+    "typescript": "latest"
+  },
+  "scripts": {
+    "dev": "ts-node-dev src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  }
+}

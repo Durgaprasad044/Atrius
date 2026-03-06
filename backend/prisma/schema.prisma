@@ -1,0 +1,130 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String?
+  googleId  String?  @unique
+  image     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile  Profile?
+  posts    Post[]
+  comments Comment[]
+  matches  Match[]   @relation("UserMatches")
+  matchedBy Match[]  @relation("MatchedUserMatches")
+  events   Event[]   @relation("OrganizerEvents")
+  attendees EventAttendee[]
+}
+
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  title          String   @default("")
+  location       String   @default("")
+  company        String   @default("")
+  education      String   @default("")
+  bio            String   @default("")
+  avatarInitials String   @default("")
+  website        String   @default("")
+
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills    Skill[]
+  interests Interest[]
+  stats     Stats?
+}
+
+model Skill {
+  id        String  @id @default(cuid())
+  profileId String
+  name      String
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Interest {
+  id        String  @id @default(cuid())
+  profileId String
+  name      String
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Stats {
+  id             String @id @default(cuid())
+  profileId      String @unique
+  connections    Int    @default(0)
+  smartMatches   Int    @default(0)
+  eventsAttended Int    @default(0)
+  postsShared    Int    @default(0)
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+}
+
+model Match {
+  id            String   @id @default(cuid())
+  userId        String
+  matchedUserId String
+  score         Float    @default(0)
+  status        String   @default("pending")
+  createdAt     DateTime @default(now())
+
+  user        User @relation("UserMatches", fields: [userId], references: [id], onDelete: Cascade)
+  matchedUser User @relation("MatchedUserMatches", fields: [matchedUserId], references: [id], onDelete: Cascade)
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  userId    String
+  content   String
+  likes     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  postId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  date        DateTime
+  location    String   @default("")
+  organizerId String
+  createdAt   DateTime @default(now())
+
+  organizer User            @relation("OrganizerEvents", fields: [organizerId], references: [id], onDelete: Cascade)
+  attendees EventAttendee[]
+}
+
+model EventAttendee {
+  id      String @id @default(cuid())
+  eventId String
+  userId  String
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+}
