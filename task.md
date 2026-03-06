@@ -1,48 +1,67 @@
-In my Next.js frontend, remove ALL dummy/hardcoded data from every page and replace with real API calls to http://localhost:5000.
-Pages that have dummy data to fix:
+In my Next.js frontend, create two pages that match the existing dark theme (bg-zinc-950, bg-zinc-900 cards).
+Page 1: app/dashboard/settings/page.tsx
+Create a full settings page with these sections:
+Account Settings
 
-Smart Matches page — showing fake users (Sarah Chen, Michael Park, etc.)
-Feed page — showing fake posts
-Events page — showing fake events
+Profile photo upload (just UI, no backend needed)
+Full name input
+Email input (readonly)
+Job title input
+Location input
+Company input
+Education input
+Bio textarea
+Save Changes button → calls PUT /api/profile/me with updated data
 
-For Smart Matches page:
+Password & Security
 
-Remove ALL hardcoded user cards (Sarah Chen, Michael Park, Emily Rodriguez, etc.)
-Fetch real matches from GET /api/matches using token from localStorage
-If no matches exist yet, show an empty state: "No matches found yet. Complete your profile to get matched!"
-Map over real matches data to render cards
-If API returns 401, redirect to /auth/login
+Current password input
+New password input
+Confirm new password input
+Update Password button
 
-For Feed page:
+Notifications
 
-Remove ALL hardcoded posts
-Fetch real posts from GET /api/posts
-Show empty state if no posts: "No posts yet. Be the first to share!"
-Create post form should call POST /api/posts
-Delete post should call DELETE /api/posts/:id
+Toggle switches for:
 
-For Events page:
+Email notifications
+Match notifications
+Event reminders
+Weekly digest
 
-Remove ALL hardcoded events
-Fetch real events from GET /api/events
-Show empty state if no events: "No events yet."
-Create event should call POST /api/events
-Attend/unattend should call POST /api/events/:id/attend
 
-For ALL pages:
 
-Add 'use client' at top
-Use useEffect + useState for data fetching
-Show loading spinner while fetching
-Show empty state when no data
-Use token from localStorage for all API calls
-Redirect to /auth/login on 401
+Danger Zone
+
+Delete Account button (red, shows confirmation dialog before acting)
+
+
+Page 2: app/dashboard/help/page.tsx
+Create a help & support page with:
+FAQ Section with these questions and answers:
+
+"How does Smart Matching work?" → AI analyzes your skills and interests to find compatible professionals
+"How do I improve my Profile Strength?" → Add skills, interests, bio, and complete all profile fields
+"Can I delete my account?" → Yes, go to Settings → Danger Zone
+"How do I report a user?" → Use the flag icon on their profile or contact support
+"Is my data private?" → Yes, we never share your data with third parties
+
+Contact Support Section
+
+Subject input
+Message textarea
+Submit button
+
+Resources Section
+
+3 cards: "Getting Started Guide", "Privacy Policy", "Terms of Service"
 
 Rules:
 
-Remove every single hardcoded name, number, skill, post, event
-Do NOT change UI layout or design
-Keep all existing components and styling intact
-Only replace the data source from hardcoded to API
+Both pages use 'use client'
+Match existing dark theme exactly (bg-zinc-950 background, bg-zinc-900 cards, white text)
+Use shadcn/ui components: Input, Textarea, Button, Switch, Card
+Settings page fetches current profile data on load and pre-fills all fields
+Do NOT change sidebar or navbar
 
 

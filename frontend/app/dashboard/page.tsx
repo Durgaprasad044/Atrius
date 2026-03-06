@@ -10,6 +10,8 @@ import { ProfileSection } from "@/components/dashboard/profile-section"
 import { MatchesSection } from "@/components/dashboard/matches-section"
 import { FeedSection } from "@/components/dashboard/feed-section"
 import { EventsSection } from "@/components/dashboard/events-section"
+import { SettingsSection } from "@/components/dashboard/settings-section"
+import { HelpSection } from "@/components/dashboard/help-section"
 import { Loader2 } from "lucide-react"
 
 export default function DashboardPage() {
@@ -56,6 +58,10 @@ export default function DashboardPage() {
         return <FeedSection />
       case "events":
         return <EventsSection />
+      case "settings":
+        return <SettingsSection />
+      case "help":
+        return <HelpSection />
       default:
         return <ProfileSection profile={profile} onProfileUpdate={fetchProfile} />
     }
