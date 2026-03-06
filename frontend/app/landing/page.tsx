@@ -43,9 +43,12 @@ export default function LandingPage() {
 
             {/* CTA & Mobile Toggle */}
             <div className="flex items-center gap-4">
+              <Link href="/auth/login" className="hidden md:inline-flex text-sm font-medium text-zinc-400 hover:text-white transition-colors">
+                Log in
+              </Link>
               <div className="hidden md:block">
                 <Link 
-                  href="/dashboard" 
+                  href="/auth/register" 
                   className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700 transition-colors"
                 >
                   Get Started
@@ -69,9 +72,16 @@ export default function LandingPage() {
               <a href="#how-it-works" className="text-sm font-medium text-zinc-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>How it Works</a>
               <a href="#testimonials" className="text-sm font-medium text-zinc-400 hover:text-white" onClick={() => setIsMobileMenuOpen(false)}>Testimonials</a>
             </div>
-            <div className="pt-4 border-t border-zinc-800">
+            <div className="pt-4 border-t border-zinc-800 flex flex-col gap-2">
               <Link 
-                href="/dashboard" 
+                href="/auth/login" 
+                className="flex w-full items-center justify-center rounded-md border border-zinc-700 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Log in
+              </Link>
+              <Link 
+                href="/auth/register" 
                 className="flex w-full items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow hover:bg-blue-700"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -109,7 +119,7 @@ export default function LandingPage() {
                 
                 <div className="flex flex-col sm:flex-row gap-4 pt-4">
                   <Link 
-                    href="/dashboard" 
+                    href="/auth/register" 
                     className="inline-flex h-12 items-center justify-center rounded-md bg-blue-600 px-8 text-base font-semibold text-white shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all gap-2"
                   >
                     Join Atrius Today <ChevronRight className="h-5 w-5" />
@@ -368,7 +378,7 @@ export default function LandingPage() {
                 Join the exclusive network of industry leaders matching opportunities with ambition.
               </p>
               <Link 
-                href="/dashboard" 
+                href="/auth/register" 
                 className="inline-flex h-14 items-center justify-center rounded-md bg-blue-600 px-10 text-lg font-semibold text-white shadow hover:bg-blue-700 transition-colors"
               >
                 Get Started for Free
