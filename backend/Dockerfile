@@ -6,7 +6,7 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-RUN npx tsc
+RUN chmod +x node_modules/.bin/tsc && node_modules/.bin/tsc
 
 EXPOSE 5000
 
