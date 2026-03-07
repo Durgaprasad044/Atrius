@@ -4,7 +4,6 @@ import { Inter, Montserrat } from "next/font/google"
 
 import { cn } from "@/lib/utils"
 import { ThemeProvider } from "@/components/theme-provider"
-import 'tailwindcss/tailwind.css'
 import "@/app/globals.css"
 
 const fontSans = Inter({
