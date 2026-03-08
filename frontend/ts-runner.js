@@ -1,5 +1,7 @@
 const ts = require("typescript");
-const program = ts.createProgram(["components/ui/chart.tsx"], {
+const files = process.argv.slice(2);
+if (files.length === 0) files.push("components/ui/chart.tsx");
+const program = ts.createProgram(files, {
     jsx: ts.JsxEmit.ReactJSX,
     esModuleInterop: true,
     skipLibCheck: true,
