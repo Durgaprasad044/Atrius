@@ -12,4 +12,4 @@ RUN chmod +x node_modules/.prisma/client/libquery_engine* 2>/dev/null || true
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/index.js 2>&1"]
