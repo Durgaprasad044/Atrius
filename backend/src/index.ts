@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
+import session from "express-session";
 import cors from "cors";
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
@@ -36,6 +37,17 @@ app.use(
   })
 );
 app.use(express.json());
+
+// Session (required for passport OAuth state verification)
+app.use(session({
+  secret: process.env.JWT_SECRET as string,
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 10 * 60 * 1000, // 10 minutes, only needed during OAuth handshake
+  },
+}));
 
 // Passport Google OAuth Strategy
 passport.use(
@@ -124,6 +136,7 @@ passport.deserializeUser((user: Express.User, done) => {
 });
 
 app.use(passport.initialize());
+app.use(passport.session());
 
 // Routes
 app.use("/api/auth", authRoutes);
