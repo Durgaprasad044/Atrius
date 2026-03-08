@@ -11,6 +11,9 @@ COPY . .
 RUN node_modules/.bin/prisma generate
 RUN node_modules/.bin/tsc
 
+# Verify dist output exists
+RUN ls -la dist/ && cat dist/index.js | head -5
+
 EXPOSE 5000
 
 CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/index.js"]
