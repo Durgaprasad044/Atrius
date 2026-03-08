@@ -3,10 +3,11 @@
 import type React from "react"
 
 import { useRef, useState } from "react"
-import { motion } from "framer-motion"
+import { motion, HTMLMotionProps } from "framer-motion"
 import { cn } from "@/lib/utils"
 
-interface GlowingTiltCardProps extends React.HTMLAttributes<HTMLDivElement> {
+interface GlowingTiltCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
+  children?: React.ReactNode
   tiltAmount?: number
   glareOpacity?: number
   perspective?: number
