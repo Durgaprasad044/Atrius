@@ -12,4 +12,4 @@ RUN node_modules/.bin/tsc
 
 EXPOSE 5000
 
-CMD ["npm", "run", "start"]
+CMD ["node", "-e", "console.log('NODE STARTED'); console.log('PORT:', process.env.PORT); console.log('DATABASE_URL exists:', !!process.env.DATABASE_URL); try { require('./dist/index.js'); } catch(e) { console.error('REQUIRE ERROR:', e); process.exit(1); }"]
