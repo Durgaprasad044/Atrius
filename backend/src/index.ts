@@ -6,6 +6,7 @@ import cors from "cors";
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 import { prisma } from "./lib/prisma";
+import { Prisma } from "@prisma/client";
 import { errorMiddleware } from "./middleware/errorMiddleware";
 
 import authRoutes from "./routes/authRoutes";
@@ -49,7 +50,7 @@ passport.use(
         let user = await prisma.user.findUnique({ where: { email } });
 
         if (!user) {
-          user = await prisma.$transaction(async (tx) => {
+          user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             const newUser = await tx.user.create({
               data: {
                 name: profile.displayName || email.split("@")[0],

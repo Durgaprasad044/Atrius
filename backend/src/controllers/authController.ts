@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
+import { Prisma } from "@prisma/client";
 
 const generateToken = (id: string, email: string): string => {
   return jwt.sign({ id, email }, process.env.JWT_SECRET as string, {
@@ -30,7 +31,7 @@ export const register = async (
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.$transaction(async (tx) => {
+    const user = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const newUser = await tx.user.create({
         data: {
           name: name || email.split("@")[0],
