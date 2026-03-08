@@ -12,4 +12,4 @@ RUN node_modules/.bin/tsc
 
 EXPOSE 5000
 
-CMD ["npm", "start"]
+CMD ["npm", "run", "start"]
