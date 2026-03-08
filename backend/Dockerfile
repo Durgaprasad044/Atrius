@@ -6,10 +6,11 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-RUN chmod +x node_modules/.bin/tsc && node_modules/.bin/tsc
-RUN chmod +x node_modules/.bin/prisma
-RUN chmod +x node_modules/.prisma/client/libquery_engine* 2>/dev/null || true
+
+# Generate Prisma client first, then compile TypeScript
+RUN node_modules/.bin/prisma generate
+RUN node_modules/.bin/tsc
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/index.js 2>&1"]
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/index.js"]
