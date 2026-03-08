@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useEffect, type ReactNode } from "react"
-import { motion, useAnimation, useScroll, useTransform, type Variant } from "framer-motion"
+import { motion, useAnimation, useScroll, useTransform } from "framer-motion"
 import { useInView } from "react-intersection-observer"
 import { cn } from "@/lib/utils"
 
@@ -42,71 +42,69 @@ export function ScrollAnimation({
 
   // Define animation variants
   const getVariants = () => {
-    const variants: { hidden: Variant; visible: Variant } = {
-      hidden: {},
-      visible: {},
-    }
+    const hidden: Record<string, unknown> = {}
+    const visible: Record<string, unknown> = {}
 
     // Handle fade animation
     if (type === "fade" || type === "slide") {
-      variants.hidden.opacity = 0
-      variants.visible.opacity = 1
+      hidden.opacity = 0
+      visible.opacity = 1
     }
 
     // Handle slide animation
     if (type === "slide") {
       switch (direction) {
         case "up":
-          variants.hidden.y = distance
-          variants.visible.y = 0
+          hidden.y = distance
+          visible.y = 0
           break
         case "down":
-          variants.hidden.y = -distance
-          variants.visible.y = 0
+          hidden.y = -distance
+          visible.y = 0
           break
         case "left":
-          variants.hidden.x = distance
-          variants.visible.x = 0
+          hidden.x = distance
+          visible.x = 0
           break
         case "right":
-          variants.hidden.x = -distance
-          variants.visible.x = 0
+          hidden.x = -distance
+          visible.x = 0
           break
       }
     }
 
     // Handle scale animation
     if (type === "scale") {
-      variants.hidden.scale = 0.8
-      variants.visible.scale = 1
+      hidden.scale = 0.8
+      visible.scale = 1
     }
 
     // Handle rotate animation
     if (type === "rotate") {
-      variants.hidden.rotate = direction === "left" ? -90 : 90
-      variants.visible.rotate = 0
+      hidden.rotate = direction === "left" ? -90 : 90
+      visible.rotate = 0
     }
 
     // Handle flip animation
     if (type === "flip") {
       if (direction === "up" || direction === "down") {
-        variants.hidden.rotateX = direction === "down" ? 90 : -90
-        variants.visible.rotateX = 0
+        hidden.rotateX = direction === "down" ? 90 : -90
+        visible.rotateX = 0
       } else {
-        variants.hidden.rotateY = direction === "right" ? 90 : -90
-        variants.visible.rotateY = 0
+        hidden.rotateY = direction === "right" ? 90 : -90
+        visible.rotateY = 0
       }
     }
 
     // Add transition to visible state
-    variants.visible.transition = {
+    visible.transition = {
       duration,
       delay,
       ease,
       staggerChildren: staggerChildren ? staggerDelay : 0,
     }
 
-    return variants
+    return { hidden, visible }
   }
 
   useEffect(() => {
@@ -118,7 +116,7 @@ export function ScrollAnimation({
   }, [controls, inView, once])
 
   return (
-    <motion.div ref={ref} className={className} initial="hidden" animate={controls} variants={getVariants()}>
+    <motion.div ref={ref} className={className} initial="hidden" animate={controls} variants={getVariants() as any}>
       {children}
     </motion.div>
   )
