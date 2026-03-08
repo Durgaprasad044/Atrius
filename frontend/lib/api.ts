@@ -60,6 +60,20 @@ export async function updateProfile(data: Record<string, string>) {
   return result;
 }
 
+export async function searchUsers(query: string) {
+  const res = await fetchAPI(`/api/profile/search?q=${encodeURIComponent(query)}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to search users");
+  return data;
+}
+
+export async function getUserProfile(userId: string) {
+  const res = await fetchAPI(`/api/profile/${userId}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch user profile");
+  return data;
+}
+
 // --- Skills ---
 
 export async function addSkill(name: string) {
