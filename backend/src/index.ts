@@ -1,5 +1,3 @@
-console.log("=== INDEX.TS LOADING ===");
-
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -8,7 +6,6 @@ import cors from "cors";
 import passport from "passport";
 import { Strategy as GoogleStrategy, Profile } from "passport-google-oauth20";
 import { prisma } from "./lib/prisma";
-console.log("=== PRISMA IMPORTED ===");
 import { Prisma } from "@prisma/client";
 import { errorMiddleware } from "./middleware/errorMiddleware";
 
@@ -27,8 +24,6 @@ process.on("unhandledRejection", (reason) => {
   console.error("Unhandled Rejection:", reason);
   process.exit(1);
 });
-
-console.log("=== SETTING UP EXPRESS ===");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -144,8 +139,6 @@ app.get("/api/health", (_req, res) => {
 
 // Error middleware (must be last)
 app.use(errorMiddleware);
-
-console.log("=== CALLING APP.LISTEN ON PORT:", PORT, "===");
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
