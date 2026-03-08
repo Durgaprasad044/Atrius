@@ -1,5 +1,8 @@
 FROM node:18-alpine
 
+# Cache bust - increment this to force full rebuild
+ARG CACHEBUST=2
+
 WORKDIR /app
 
 COPY package*.json ./
