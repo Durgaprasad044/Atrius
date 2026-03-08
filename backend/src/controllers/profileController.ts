@@ -76,6 +76,92 @@ export const updateMyProfile = async (
   }
 };
 
+export const searchUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const currentUserId = (req.user as AuthUser).id;
+    const query = req.query.q as string;
+
+    if (!query || query.trim().length === 0) {
+      res.status(400).json({ message: "Search query is required" });
+      return;
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        AND: [
+          { id: { not: currentUserId } }, // exclude self
+          {
+            OR: [
+              { name: { contains: query, mode: "insensitive" } },
+              { email: { contains: query, mode: "insensitive" } },
+            ],
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        profile: {
+          select: {
+            title: true,
+            location: true,
+            company: true,
+            avatarInitials: true,
+            skills: { select: { name: true } },
+          },
+        },
+      },
+      take: 20, // limit results
+    });
+
+    res.json(users);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    const { userId } = req.params;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        profile: {
+          include: {
+            skills: true,
+            interests: true,
+            stats: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      res.status(404).json({ message: "User not found" });
+      return;
+    }
+
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const addSkill = async (
   req: Request,
   res: Response,
