@@ -28,7 +28,7 @@ const defaultAnimations = {
   },
   bounce: {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { type: "spring", bounce: 0.5 } },
+    visible: { opacity: 1, y: 0, transition: { type: "spring" as const, bounce: 0.5 } },
   },
   typewriter: {
     hidden: { opacity: 0, width: 0 },
@@ -82,7 +82,7 @@ export function AnimatedText({
         transition={{ staggerChildren, delayChildren: delay }}
       >
         {text.split("").map((char, i) => (
-          <motion.span key={`${char}-${i}`} className="inline-block" custom={i} variants={defaultAnimations.wave}>
+          <motion.span key={`${char}-${i}`} className="inline-block" custom={i} variants={defaultAnimations.wave as any}>
             {char === " " ? "\u00A0" : char}
           </motion.span>
         ))}
@@ -97,7 +97,7 @@ export function AnimatedText({
           ref={ref}
           initial="hidden"
           animate={controls}
-          variants={defaultAnimations.typewriter}
+          variants={defaultAnimations.typewriter as any}
           transition={{ duration: duration * 2, delay, ease: "easeInOut" }}
           style={{ color }}
         >
@@ -113,7 +113,7 @@ export function AnimatedText({
       className={cn(variant === "heading" ? "font-heading" : "text-muted-foreground opacity-70", className)}
       initial="hidden"
       animate={controls}
-      variants={defaultAnimations[animation]}
+      variants={defaultAnimations[animation] as any}
       transition={{ duration, delay }}
       style={{ color }}
     >
