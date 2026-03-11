@@ -189,3 +189,102 @@ export async function attendEvent(id: string) {
   if (!res.ok) throw new Error(data.message || "Failed to update attendance");
   return data;
 }
+
+// --- Connections ---
+
+export async function sendConnectionRequest(userId: string) {
+  const res = await fetchAPI(`/api/connections/request/${userId}`, {
+    method: "POST",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to send connection request");
+  return data;
+}
+
+export async function acceptConnectionRequest(connectionId: string) {
+  const res = await fetchAPI(`/api/connections/accept/${connectionId}`, {
+    method: "POST",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to accept request");
+  return data;
+}
+
+export async function rejectConnectionRequest(connectionId: string) {
+  const res = await fetchAPI(`/api/connections/reject/${connectionId}`, {
+    method: "POST",
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to reject request");
+  return data;
+}
+
+export async function getConnections() {
+  const res = await fetchAPI("/api/connections");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch connections");
+  return data;
+}
+
+export async function getPendingRequests() {
+  const res = await fetchAPI("/api/connections/pending");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch pending requests");
+  return data;
+}
+
+export async function getConnectionStatus(targetId: string) {
+  const res = await fetchAPI(`/api/connections/status/${targetId}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to get connection status");
+  return data;
+}
+
+// --- Messages ---
+
+export async function sendMessage(userId: string, content: string) {
+  const res = await fetchAPI(`/api/messages/${userId}`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to send message");
+  return data;
+}
+
+export async function getConversation(userId: string) {
+  const res = await fetchAPI(`/api/messages/${userId}`);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch conversation");
+  return data;
+}
+
+export async function getConversationList() {
+  const res = await fetchAPI("/api/messages");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch conversations");
+  return data;
+}
+
+// --- Notifications ---
+
+export async function getNotifications() {
+  const res = await fetchAPI("/api/notifications");
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to fetch notifications");
+  return data;
+}
+
+export async function markNotificationAsRead(id: string) {
+  const res = await fetchAPI(`/api/notifications/${id}/read`, { method: "PUT" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to mark notification");
+  return data;
+}
+
+export async function markAllNotificationsAsRead() {
+  const res = await fetchAPI("/api/notifications/read-all", { method: "PUT" });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || "Failed to mark all notifications");
+  return data;
+}

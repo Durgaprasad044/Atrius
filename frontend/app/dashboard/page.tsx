@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { getProfile } from "@/lib/api"
 import { isAuthenticated } from "@/lib/auth"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
@@ -16,10 +16,17 @@ import { Loader2 } from "lucide-react"
 
 export default function DashboardPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState("profile")
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Sync tab from URL param (used by notification clicks)
+  useEffect(() => {
+    const tab = searchParams.get("tab")
+    if (tab) setActiveTab(tab)
+  }, [searchParams])
 
   const fetchProfile = useCallback(async () => {
     try {

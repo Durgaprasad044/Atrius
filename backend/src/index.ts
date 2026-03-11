@@ -15,6 +15,9 @@ import profileRoutes from "./routes/profileRoutes";
 import postRoutes from "./routes/postRoutes";
 import eventRoutes from "./routes/eventRoutes";
 import matchRoutes from "./routes/matchRoutes";
+import connectionRoutes from "./routes/connectionRoute";
+import messageRoutes from "./routes/messageRoute";
+import notificationRoutes from "./routes/notificationRoute";
 
 process.on("uncaughtException", (err) => {
   console.error("Uncaught Exception:", err);
@@ -144,6 +147,9 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/matches", matchRoutes);
+app.use("/api/connections", connectionRoutes);
+app.use("/api/messages", messageRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // Health check
 app.get("/api/health", (_req, res) => {

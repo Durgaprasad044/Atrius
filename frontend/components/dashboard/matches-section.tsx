@@ -1,14 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Sparkles, MessageCircle, UserPlus, Search, MapPin, Briefcase, Send, Loader2 } from "lucide-react"
+import { Sparkles, MessageCircle, UserPlus, Search, MapPin, Briefcase, Send, Loader2, Check, Clock, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Dialog,
   DialogContent,
@@ -16,7 +17,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { getMatches, searchUsers } from "@/lib/api"
+import {
+  getMatches,
+  searchUsers,
+  sendConnectionRequest,
+  getConnectionStatus,
+  sendMessage,
+  getConversation,
+} from "@/lib/api"
+import { ConnectionRespondDialog } from "@/components/dashboard/connection-respond"
 
 interface MatchUser {
   id: string
@@ -52,6 +61,22 @@ interface SearchResult {
   }
 }
 
+interface Message {
+  id: string
+  content: string
+  senderId: string
+  createdAt: string
+  sender: { id: string; name: string; image?: string }
+}
+
+type ConnectionStatus = "NONE" | "PENDING" | "ACCEPTED" | "REJECTED"
+
+interface ConnectionState {
+  status: ConnectionStatus
+  connectionId: string | null
+  isSender: boolean
+}
+
 export function MatchesSection() {
   const router = useRouter()
   const [matches, setMatches] = useState<Match[]>([])
@@ -59,17 +84,43 @@ export function MatchesSection() {
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [searching, setSearching] = useState(false)
-  const [messageDialog, setMessageDialog] = useState<{ open: boolean; match: Match | null }>({
+  const [connectionStates, setConnectionStates] = useState<Record<string, ConnectionState>>({})
+  const [connectingId, setConnectingId] = useState<string | null>(null)
+
+  // Message dialog state
+  const [messageDialog, setMessageDialog] = useState<{ open: boolean; user: MatchUser | null }>({
     open: false,
-    match: null,
+    user: null,
   })
-  const [message, setMessage] = useState("")
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState("")
+  const [sendingMessage, setSendingMessage] = useState(false)
+  const [loadingMessages, setLoadingMessages] = useState(false)
+
+  // Respond dialog state
+  const [respondDialog, setRespondDialog] = useState<{
+    open: boolean
+    connection: { connectionId: string; user: MatchUser } | null
+  }>({ open: false, connection: null })
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
         const data = await getMatches()
         setMatches(data)
+        // Fetch connection status for all matches
+        const statuses: Record<string, ConnectionState> = {}
+        await Promise.all(
+          data.map(async (match: Match) => {
+            try {
+              const status = await getConnectionStatus(match.matchedUser.id)
+              statuses[match.matchedUser.id] = status
+            } catch {
+              statuses[match.matchedUser.id] = { status: "NONE", connectionId: null, isSender: false }
+            }
+          })
+        )
+        setConnectionStates(statuses)
       } catch {
         router.push("/auth/login")
       } finally {
@@ -85,30 +136,131 @@ export function MatchesSection() {
       setSearchResults([])
       return
     }
-
     const timeout = setTimeout(async () => {
       setSearching(true)
       try {
         const results = await searchUsers(searchQuery)
         setSearchResults(results)
+        // Fetch connection status for search results
+        const statuses: Record<string, ConnectionState> = { ...connectionStates }
+        await Promise.all(
+          results.map(async (user: SearchResult) => {
+            if (!statuses[user.id]) {
+              try {
+                const status = await getConnectionStatus(user.id)
+                statuses[user.id] = status
+              } catch {
+                statuses[user.id] = { status: "NONE", connectionId: null, isSender: false }
+              }
+            }
+          })
+        )
+        setConnectionStates(statuses)
       } catch (error) {
         console.error("Search failed:", error)
       } finally {
         setSearching(false)
       }
     }, 400)
-
     return () => clearTimeout(timeout)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery])
 
-  const openMessageDialog = (match: Match) => {
-    setMessageDialog({ open: true, match })
-    setMessage("")
+  const handleConnect = async (userId: string) => {
+    setConnectingId(userId)
+    try {
+      await sendConnectionRequest(userId)
+      setConnectionStates(prev => ({
+        ...prev,
+        [userId]: { status: "PENDING", connectionId: null, isSender: true },
+      }))
+    } catch (error) {
+      console.error("Failed to send connection request:", error)
+    } finally {
+      setConnectingId(null)
+    }
   }
 
-  const sendMessage = () => {
-    setMessageDialog({ open: false, match: null })
-    setMessage("")
+  const openMessageDialog = useCallback(async (user: MatchUser) => {
+    setMessageDialog({ open: true, user })
+    setLoadingMessages(true)
+    setMessages([])
+    try {
+      const data = await getConversation(user.id)
+      setMessages(data)
+    } catch (error) {
+      console.error("Failed to load messages:", error)
+    } finally {
+      setLoadingMessages(false)
+    }
+  }, [])
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !messageDialog.user) return
+    setSendingMessage(true)
+    try {
+      const msg = await sendMessage(messageDialog.user.id, newMessage.trim())
+      setMessages(prev => [...prev, msg])
+      setNewMessage("")
+    } catch (error) {
+      console.error("Failed to send message:", error)
+    } finally {
+      setSendingMessage(false)
+    }
+  }
+
+  const renderConnectButton = (userId: string) => {
+    const state = connectionStates[userId]
+    const isConnecting = connectingId === userId
+
+    if (!state || state.status === "NONE") {
+      return (
+        <Button size="sm" className="flex-1" onClick={() => handleConnect(userId)} disabled={isConnecting}>
+          {isConnecting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />}
+          Connect
+        </Button>
+      )
+    }
+    if (state.status === "PENDING") {
+      if (!state.isSender && state.connectionId) {
+        return (
+          <Button
+            size="sm"
+            className="flex-1"
+            variant="outline"
+            onClick={() => setRespondDialog({
+              open: true,
+              connection: { connectionId: state.connectionId!, user: { id: userId, name: "", image: "" } }
+            })}
+          >
+            <Clock className="h-4 w-4 mr-2" />
+            Respond
+          </Button>
+        )
+      }
+      return (
+        <Button size="sm" className="flex-1" variant="outline" disabled>
+          <Clock className="h-4 w-4 mr-2" />
+          Pending
+        </Button>
+      )
+    }
+    if (state.status === "ACCEPTED") {
+      return (
+        <Button size="sm" className="flex-1" variant="outline" disabled>
+          <Check className="h-4 w-4 mr-2" />
+          Connected
+        </Button>
+      )
+    }
+    if (state.status === "REJECTED") {
+      return (
+        <Button size="sm" className="flex-1" variant="outline" disabled>
+          <X className="h-4 w-4 mr-2" />
+          Rejected
+        </Button>
+      )
+    }
   }
 
   if (loading) {
@@ -174,9 +326,7 @@ export function MatchesSection() {
                     <div className="flex items-center gap-3 mb-4">
                       <Avatar className="h-14 w-14">
                         <AvatarImage src={user.image || ""} alt={user.name} />
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          {initials}
-                        </AvatarFallback>
+                        <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
                       </Avatar>
                       <div>
                         <h3 className="font-semibold">{user.name}</h3>
@@ -197,10 +347,18 @@ export function MatchesSection() {
                         </span>
                       )}
                     </div>
-                    <Button size="sm" className="w-full">
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Connect
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => openMessageDialog(user)}
+                      >
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        Message
+                      </Button>
+                      {renderConnectButton(user.id)}
+                    </div>
                   </CardContent>
                 </Card>
               )
@@ -230,9 +388,7 @@ export function MatchesSection() {
                         <div className="flex items-center gap-3">
                           <Avatar className="h-14 w-14">
                             <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {initials}
-                            </AvatarFallback>
+                            <AvatarFallback className="bg-primary/10 text-primary">{initials}</AvatarFallback>
                           </Avatar>
                           <div>
                             <h3 className="font-semibold">{user?.name || "Unknown"}</h3>
@@ -245,18 +401,13 @@ export function MatchesSection() {
                         </div>
                       </div>
 
-                      {/* Shared skills/interests */}
                       {match.sharedSkills && match.sharedSkills.length > 0 && (
                         <div className="flex flex-wrap gap-1 mb-3">
                           {match.sharedSkills.slice(0, 3).map((skill) => (
-                            <Badge key={skill} variant="secondary" className="text-xs">
-                              {skill}
-                            </Badge>
+                            <Badge key={skill} variant="secondary" className="text-xs">{skill}</Badge>
                           ))}
                           {match.sharedSkills.length > 3 && (
-                            <Badge variant="secondary" className="text-xs">
-                              +{match.sharedSkills.length - 3} more
-                            </Badge>
+                            <Badge variant="secondary" className="text-xs">+{match.sharedSkills.length - 3} more</Badge>
                           )}
                         </div>
                       )}
@@ -282,15 +433,12 @@ export function MatchesSection() {
                             variant="outline"
                             size="sm"
                             className="flex-1"
-                            onClick={() => openMessageDialog(match)}
+                            onClick={() => openMessageDialog(user)}
                           >
                             <MessageCircle className="h-4 w-4 mr-2" />
                             Message
                           </Button>
-                          <Button size="sm" className="flex-1">
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Connect
-                          </Button>
+                          {renderConnectButton(user.id)}
                         </div>
                       </div>
                     </CardContent>
@@ -303,49 +451,99 @@ export function MatchesSection() {
       )}
 
       {/* Message Dialog */}
-      <Dialog open={messageDialog.open} onOpenChange={(open) => setMessageDialog({ open, match: messageDialog.match })}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={messageDialog.open} onOpenChange={(open) => {
+        if (!open) setMessageDialog({ open: false, user: null })
+      }}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
-              {messageDialog.match && (
+              {messageDialog.user && (
                 <>
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={messageDialog.match.matchedUser?.image || ""} alt={messageDialog.match.matchedUser?.name || ""} />
+                    <AvatarImage src={messageDialog.user.image || ""} alt={messageDialog.user.name || ""} />
                     <AvatarFallback className="bg-primary/10 text-primary">
-                      {messageDialog.match.matchedUser?.name?.split(" ").map(n => n[0]).join("") || "?"}
+                      {messageDialog.user.name?.split(" ").map(n => n[0]).join("") || "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p>{messageDialog.match.matchedUser?.name}</p>
-                    <p className="text-sm font-normal text-muted-foreground">{messageDialog.match.matchedUser?.profile?.title || ""}</p>
+                    <p>{messageDialog.user.name}</p>
+                    <p className="text-sm font-normal text-muted-foreground">{messageDialog.user.profile?.title || ""}</p>
                   </div>
                 </>
               )}
             </DialogTitle>
             <DialogDescription>
-              Start a conversation to explore collaboration opportunities
+              Send a message to start a conversation
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 pt-4">
+
+          {/* Conversation history */}
+          <ScrollArea className="h-64 rounded-md border p-3">
+            {loadingMessages ? (
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-sm text-muted-foreground">No messages yet. Say hello!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {messages.map((msg) => {
+                  const isMe = msg.senderId !== messageDialog.user?.id
+                  return (
+                    <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                      <div className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${isMe ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                        {msg.content}
+                        <p className={`text-xs mt-1 ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </ScrollArea>
+
+          {/* Input */}
+          <div className="flex gap-2 pt-2">
             <Textarea
               placeholder="Write your message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={4}
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              rows={2}
               className="resize-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSendMessage()
+                }
+              }}
             />
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setMessageDialog({ open: false, match: null })}>
-                Cancel
-              </Button>
-              <Button onClick={sendMessage} disabled={!message.trim()}>
-                <Send className="h-4 w-4 mr-2" />
-                Send Message
-              </Button>
-            </div>
+            <Button onClick={handleSendMessage} disabled={!newMessage.trim() || sendingMessage} className="self-end">
+              {sendingMessage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
+      {/* Respond Dialog */}
+      <ConnectionRespondDialog
+        open={respondDialog.open}
+        onClose={() => setRespondDialog({ open: false, connection: null })}
+        connection={respondDialog.connection}
+        onResponded={(connectionId, status) => {
+          setConnectionStates(prev => {
+            const updated = { ...prev }
+            Object.keys(updated).forEach(uid => {
+              if (updated[uid].connectionId === connectionId) {
+                updated[uid] = { ...updated[uid], status }
+              }
+            })
+            return updated
+          })
+        }}
+      />
     </div>
   )
 }
