@@ -14,7 +14,7 @@ import { SettingsSection } from "@/components/dashboard/settings-section"
 import { HelpSection } from "@/components/dashboard/help-section"
 import { Loader2 } from "lucide-react"
 
-export default function DashboardPage() {
+export default function DashboardClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [activeTab, setActiveTab] = useState("profile")
@@ -22,7 +22,6 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Sync tab from URL param (used by notification clicks)
   useEffect(() => {
     const tab = searchParams.get("tab")
     if (tab) setActiveTab(tab)
