@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import DashboardClient from "./DashboardClient"
 import { Loader2 } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 export default function DashboardPage() {
   return (
     <Suspense fallback={
